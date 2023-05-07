@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oesbackend-deployment
+  labels:
+    app: oesbackend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oesbackend
+  template:
+    metadata:
+      labels:
+        app: oesbackend
+    spec:
+      containers:
+        - name: oesbackend
+          image: backend:1.0
+          ports:
+            - containerPort: 8001
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-root-password
+            - name: MYSQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-username
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: database-url
+            - name: MYSQL_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: dbName
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oesbackend-service
+spec:
+  selector:
+    app: oesbackend
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: NodePort
